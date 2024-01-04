@@ -65,6 +65,7 @@ func main() {
 
 	// Ожидание завершения всех горутин
 	if err := g.Wait(); err != nil {
-		fmt.Println("Ошибка:", err)
+		fmt.Println("Ошибка :", err)
 	}
+
 }

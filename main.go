@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	mu             sync.Mutex
-	prevGoroutines int
+	mu sync.Mutex
 )
 
 const (
@@ -20,27 +19,20 @@ const (
 )
 
 func monitorGoroutines(ctx context.Context) {
+	ticker := time.NewTicker(checkInterval)
+	defer ticker.Stop()
+	prevGoroutines := runtime.NumGoroutine()
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(checkInterval):
+		case <-ticker.C:
 			currentGoroutines := runtime.NumGoroutine()
-
-			mu.Lock()
-			defer mu.Unlock()
-
-			if prevGoroutines != 0 {
-				change := currentGoroutines - prevGoroutines
-				changePercentage := float64(change) / float64(prevGoroutines)
-				if changePercentage > warningThreshold {
-					fmt.Printf("⚠️ Предупреждение: Количество горутин увеличилось более чем на 20%%!\n")
-				} else if changePercentage < -warningThreshold {
-					fmt.Printf("⚠️ Предупреждение: Количество горутин уменьшилось более чем на 20%%!\n")
-				}
+			change := float64(currentGoroutines-prevGoroutines) / float64(prevGoroutines)
+			if change > 0.2 || change < -0.2 {
+				fmt.Printf("⚠️ Предупреждение: Количество горутин изменилось более чем на 20%%!\n")
+				fmt.Printf("Текущее количество горутин: %d\n", currentGoroutines)
 			}
-
-			fmt.Printf("Текущее количество горутин: %d\n", currentGoroutines)
 			prevGoroutines = currentGoroutines
 		}
 	}

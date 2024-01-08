@@ -5,12 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"runtime"
-	"sync"
 	"time"
-)
-
-var (
-	mu sync.Mutex
 )
 
 const (
@@ -29,10 +24,10 @@ func monitorGoroutines(ctx context.Context) {
 		case <-ticker.C:
 			currentGoroutines := runtime.NumGoroutine()
 			change := float64(currentGoroutines-prevGoroutines) / float64(prevGoroutines)
-			if change > 0.2 || change < -0.2 {
+			if change > warningThreshold || change < -warningThreshold {
 				fmt.Printf("⚠️ Предупреждение: Количество горутин изменилось более чем на 20%%!\n")
-				fmt.Printf("Текущее количество горутин: %d\n", currentGoroutines)
 			}
+			fmt.Printf("Текущее количество горутин: %d\n", currentGoroutines)
 			prevGoroutines = currentGoroutines
 		}
 	}
